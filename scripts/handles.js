@@ -11,7 +11,7 @@
     Parameters:
         handle - WinDbg handle object
 */
-function getObjectNameFormat(handle)
+function __getObjectNameFormat(handle)
 {
     if(handle.Type == "Process")
     {
@@ -50,9 +50,9 @@ function getObjectNameFormat(handle)
     Parameters:
         handle - WinDbg handle object
 */
-function getHandleOffset(handle)
+function __getHandleOffset(handle)
 {
-    const kernelObject = handle.Object.UnderlyingObject;
+    const kernelObject = handle.Object;
     if(kernelObject)
     {
         return kernelObject.targetLocation.address;
@@ -81,7 +81,7 @@ function getHandleOffset(handle)
     Example of to use this function:
         dx -g Debugger.State.Scripts.handles.Contents.getProcessHandles(@$process)
 */
-function getProcessHandles(process)
+function handles(process)
 {
     const processHandles = process.Io.Handles;
     const currentProcessId = parseInt(process.Id.toString());
@@ -91,8 +91,8 @@ function getProcessHandles(process)
     for(const handle of processHandles)
     {
 
-        const objectNameInFormat = getObjectNameFormat(handle);
-        const objectOffset = getHandleOffset(handle);
+        const objectNameInFormat = __getObjectNameFormat(handle);
+        const objectOffset = __getHandleOffset(handle);
 
         let tempHandleInFormat = 
         {
@@ -116,5 +116,5 @@ function getProcessHandles(process)
 */
 function currentProcessHandles()
 {
-    return getProcessHandles(host.currentProcess);
+    return handles(host.currentProcess);
 }
