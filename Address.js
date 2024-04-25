@@ -72,7 +72,7 @@ class Pattern
 
 function findPatternInMemory(startAddress, endAddress, pattern)
 {
-    const isRangeBiggerEnough = (base, offset, end) => {
+    const isBigEnoughRange = (base, offset, end) => {
         return (base + offset < end);
     };
 
@@ -81,7 +81,7 @@ function findPatternInMemory(startAddress, endAddress, pattern)
 
     let resultAddresses = [];
 
-    if (!isRangeBiggerEnough(startAddress, patternManager.length, endAddress))
+    if (!isBigEnoughRange(startAddress, patternManager.length, endAddress))
     {
         return [];
     }
@@ -94,7 +94,7 @@ function findPatternInMemory(startAddress, endAddress, pattern)
             continue;
         }
 
-        if (!isRangeBiggerEnough(address, patternManager.length, endAddress))
+        if (!isBigEnoughRange(address, patternManager.length, endAddress))
         {
             continue;
         }
