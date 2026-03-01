@@ -1,5 +1,9 @@
 ﻿"use strict";
 
+const ETW_EVENTS_CONFIG_FILE_PATH =
+  "C:\\Dev\\WinDbgScripts\\scripts\\etw\\etw_events.json";
+const ETW_DEFINITIONS_FILE_PATH = "C:\\Dev\\WinDbgScripts\\scripts\\etw\\etw.h";
+
 const log = (x) => host.diagnostics.debugLog(`${x}\n`);
 const system = (x) => host.namespace.Debugger.Utility.Control.ExecuteCommand(x);
 
@@ -15,15 +19,15 @@ function getEtwTraceManager() {
 }
 
 class EtwTraceManager {
-  static #isCombaseLoaded = false;
+  static #isSyntheticTypesLoaded = false;
   static #etwEventsConfig = null;
 
   #etwTraceLogger = new Set();
   #conditionalBreakpoint = null;
 
   start() {
-    log("[etwtrace] Loading combase.dll symbols...");
-    this.#loadCombase();
+    log("[etwtrace] Loading ETW type definitions...");
+    this.#loadSyntheticTypes();
 
     log("[etwtrace] Setting conditional breakpoint on NtTraceEvent...");
     this.#conditionalBreakpoint = new ConditionalBreakpoint(
@@ -41,15 +45,17 @@ class EtwTraceManager {
     log("[etwtrace] Stopped");
   }
 
-  #loadCombase() {
-    if (EtwTraceManager.#isCombaseLoaded) {
+  #loadSyntheticTypes() {
+    if (EtwTraceManager.#isSyntheticTypesLoaded) {
       return;
     }
 
-    system(".reload /f combase.dll");
-    // TODO Access to the loaded symbols and verify it's really loaded.
+    host.namespace.Debugger.Utility.Analysis.SyntheticTypes.ReadHeader(
+      ETW_DEFINITIONS_FILE_PATH,
+      "ntdll",
+    );
 
-    EtwTraceManager.#isCombaseLoaded = true;
+    EtwTraceManager.#isSyntheticTypesLoaded = true;
   }
 
   addLog(id, stack, caller) {
@@ -149,9 +155,7 @@ class ConditionalBreakpoint {
 */
 function readEtwEventsConfig() {
   const fs = host.namespace.Debugger.Utility.FileSystem;
-  const etwEventsFile = fs.OpenFile(
-    "C:\\Dev\\WinDbgScripts\\scripts\\etw\\etw_events.json",
-  );
+  const etwEventsFile = fs.OpenFile(ETW_EVENTS_CONFIG_FILE_PATH);
 
   const reader = fs.CreateTextReader(etwEventsFile);
 
@@ -188,15 +192,15 @@ function captureThreadStack() {
   (EVENT_HEADER, HeaderType == 0).
 */
 function parseSystemTraceHeader(eventDataPtr) {
-  const traceHeader = host.createPointerObject(
-    eventDataPtr,
-    "combase",
-    "_SYSTEM_TRACE_HEADER*",
-  );
+  const traceHeader =
+    host.namespace.Debugger.Utility.Analysis.SyntheticTypes.CreateInstance(
+      "SYSTEM_TRACE_HEADER",
+      eventDataPtr,
+    );
 
   // `HookId` tells what type of event is logged.
   // https://www.geoffchappell.com/studies/windows/km/ntoskrnl/inc/api/ntwmi/wmi_trace_packet/hookid.htm
-  return { hookId: traceHeader.Packet.HookId };
+  return { hookId: Number(traceHeader.Packet.HookId) };
 }
 
 /**
@@ -254,7 +258,7 @@ function etwTraceStop() {
 }
 
 function etwTracePrintHelp() {
-  log("etwtrace utility.");
+  log("Trace ETW events.");
   log("Usage:");
   log(" !etwtrace       - prints this help.");
   log(" !etwtrace_start - starts tracing ETW events.");

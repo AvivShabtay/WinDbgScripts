@@ -7,12 +7,12 @@ A WinDbg JavaScript extension for tracing ETW (Event Tracing for Windows) events
 | File              | Description                                     |
 | ----------------- | ----------------------------------------------- |
 | `etwtrace.js`     | The WinDbg JavaScript extension                 |
+| `etw.h`           | ETW type definitions                            |
 | `etw_events.json` | Event name/group lookup table keyed by `HookId` |
 
 ## Prerequisites
 
-- Symbols for `ntdll.dll` and `combase.dll`
-- The hardcoded path in `readEtwEventsConfig()` must match where `etw_events.json` lives on disk (see [Known Limitations](#known-limitations))
+- The hardcoded paths `ETW_DEFINITIONS_FILE_PATH` and `ETW_EVENTS_CONFIG_FILE_PATH` at the top of the script must match where `etw.h` and `etw_events.json` live on disk (see [Known Limitations](#known-limitations))
 
 ## Loading the Script
 
@@ -22,12 +22,12 @@ A WinDbg JavaScript extension for tracing ETW (Event Tracing for Windows) events
 
 ## Commands
 
-| Command           | Description                                                                                                       |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `!etwtrace`       | Print help.                                                                                                       |
+| Command           | Description                                                                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `!etwtrace`       | Print help.                                                                                                         |
 | `!etwtrace_start` | Start tracing and logging ETW events, loads symbols, fetches ETW configurations, and sets a conditional breakpoint. |
 | `!etwtrace_stop`  | Stops tracing ETW events, removes the breakpoint, and clears collected logs.                                        |
-| `!etwtrace_logs`  | Return the collected trace log entries.                                                                           |
+| `!etwtrace_logs`  | Return the collected trace log entries.                                                                             |
 
 ### Typical Session
 
@@ -86,11 +86,11 @@ The extension supports analyzing the fourth argument: `Fields`, converting it to
 
 ### Hardcoded Path
 
-The WinDbg JavaScript engine does not expose a current-working-directory API, so the path to `etw_events.json` is hardcoded in `readEtwEventsConfig()`. Make sure to update this path.
+The WinDbg JavaScript engine does not expose a current-working-directory API, so we use hard-coded paths. Make sure to update this path.
 
 ### Supported Events
 
-The extension currently only handles **"classic" / NT kernel logger events**, where the `Fields` points to `_SYSTEM_TRACE_HEADER` data structure.
+The extension currently only handles **"classic" / NT kernel logger events**, where the `Fields` argument pass to `NtTraceEvent`, points to `_SYSTEM_TRACE_HEADER` data structure.
 
 ## References
 
