@@ -33,6 +33,7 @@ fffff803`8ea018b8  fbff83a0`0c7ba008
 The CFG bitmap contains entries and we need to find the one that corresponds to the target address we want to check.
 
 According to the disassembly:
+
 ![](res/bitmap-entry-lookup.png)
 
 Calculating the address of the corresponding CFG bitmap entry:
@@ -54,6 +55,7 @@ ffff8380`1ab3cc38  00004000`00000000
 CFG has different validations for **aligned** and **unaligned** pointers.
 
 According to the disassembly:
+
 ![](res/alignment-check.png)
 
 Checking the target address alignment:
@@ -73,9 +75,11 @@ In the CFG entry we read earlier, we want to check the validation bit.
 We already shifted the address right to check alignment, and it is also used as the index for the validation bit in the entry.
 
 According to the previous disassembly:
+
 ![](res/bit-index-calculation.png)
 
 And later, there is the check of that validation bit in the target address bitmap entry:
+
 ![](res/aligned-bt-check.png)
 
 When using the `bt` instruction with registers to test if a bit is set, the masking logic follows the formula:
@@ -149,6 +153,7 @@ Evaluate expression: 46 = 00000000`0000002e
 We got the same index as for the **aligned** path. Next we need to validate the index.
 
 According to the disassembly:
+
 ![](res/unaligned-present-bit-check.png)
 
 First, we need to clear the LSB, then there is a check with the `bt` instruction. Previously we used the mask: `0x3F`, but for now we are going to use `0x3E` (similar to `0x3F` without the LSB bit):
@@ -172,6 +177,7 @@ We got `0x1`, meaning we will continue the validation process. If the value was 
 ## Step 4: Check the validation bit
 
 According to the disassembly:
+
 ![](res/unaligned-validation-bit-check.png)
 
 We need to set the LSB to `0x1` before checking the entry content again:
